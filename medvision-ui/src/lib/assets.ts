@@ -1,6 +1,8 @@
 import { env } from "~/env";
 
-const API_BASE = env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1$/, "");
+const API_BASE = env.NEXT_PUBLIC_API_URL.endsWith("/api/v1")
+  ? env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
+  : `${env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")}/api/v1`;
 
 export async function fetchAuthenticatedImage(
   relativePath: string,

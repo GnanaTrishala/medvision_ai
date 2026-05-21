@@ -1,12 +1,8 @@
 import { env } from "~/env";
 
-/** Ensures all requests hit FastAPI routes under /api/v1 regardless of env suffix. */
-function apiV1Base(url: string): string {
-  const base = url.replace(/\/$/, "");
-  return base.endsWith("/api/v1") ? base : `${base}/api/v1`;
-}
-
-const API = apiV1Base(env.NEXT_PUBLIC_API_URL);
+const API = env.NEXT_PUBLIC_API_URL.endsWith("/api/v1")
+  ? env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
+  : `${env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")}/api/v1`;
 
 export class ApiError extends Error {
   constructor(
