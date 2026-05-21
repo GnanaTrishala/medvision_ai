@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: medvision-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: medvision-db
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: https://your-app.vercel.app
+      - key: MODEL_PATH
+        value: ./models/best_model.pth
+
+databases:
+  - name: medvision-db
+    plan: free
