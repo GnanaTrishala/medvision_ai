@@ -180,8 +180,8 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-- API: http://localhost:8000  
-- Interactive docs: http://localhost:8000/docs  
+- API: https://medvision-ai-iae1.onrender.com  
+- Interactive docs: https://medvision-ai-iae1.onrender.com/docs  
 
 ### 2. Frontend
 
@@ -194,7 +194,7 @@ copy .env.example .env.local   # Windows
 Set in `.env.local`:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_API_URL=https://medvision-ai-iae1.onrender.com
 ```
 
 ```bash
