@@ -1,6 +1,12 @@
 import { env } from "~/env";
 
-const API = env.NEXT_PUBLIC_API_URL;
+/** Ensures all requests hit FastAPI routes under /api/v1 regardless of env suffix. */
+function apiV1Base(url: string): string {
+  const base = url.replace(/\/$/, "");
+  return base.endsWith("/api/v1") ? base : `${base}/api/v1`;
+}
+
+const API = apiV1Base(env.NEXT_PUBLIC_API_URL);
 
 export class ApiError extends Error {
   constructor(
@@ -85,14 +91,14 @@ export type DashboardAnalytics = {
   confidence_by_day: { date: string; average_confidence: number }[];
 };
 
+const API_ROOT = API.replace(/\/api\/v1$/, "");
+
 export function assetUrl(path: string, token: string) {
-  const base = API.replace(/\/api\/v1$/, "");
-  return `${base}${path}?t=${Date.now()}`;
+  return `${API_ROOT}${path}?t=${Date.now()}`;
 }
 
 export function fileUrl(relative: string, token: string) {
-  const base = API.replace(/\/api\/v1$/, "");
-  return `${base}${relative}`;
+  return `${API_ROOT}${relative}`;
 }
 
 export const authApi = {
