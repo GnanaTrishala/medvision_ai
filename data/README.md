@@ -1,44 +1,49 @@
-# Medical image dataset layout
+# HAM10000 dataset layout
 
-MedVision expects images organized for PyTorch `ImageFolder`:
+MedVision uses the [HAM10000](https://www.kaggle.com/datasets/kmader/skin-cancer-mnist-ham10000) skin lesion dataset.
+
+## Source files (under `data/ham10000/`)
 
 ```
-data/
+data/ham10000/
+  HAM10000_metadata.csv
+  HAM10000_images/          # or HAM10000_images_part_1, part_2, etc.
+```
+
+## Class labels (7)
+
+| Code | Lesion type |
+|------|-------------|
+| akiec | Actinic keratosis / intraepithelial carcinoma |
+| bcc | Basal cell carcinoma |
+| bkl | Benign keratosis |
+| df | Dermatofibroma |
+| mel | Melanoma |
+| nv | Melanocytic nevus |
+| vasc | Vascular lesion |
+
+## Prepare ImageFolder layout
+
+```bash
+python scripts/prepare_local_data.py --source ./data/ham10000 --output ./data/ham10000
+```
+
+Creates:
+
+```
+data/ham10000/
   train/
-    NORMAL/
-      img001.jpeg
-      ...
-    PNEUMONIA/
-      img002.jpeg
-      ...
-  val/          # optional — if omitted, 20% of train is used for validation
-    NORMAL/
-    PNEUMONIA/
+    akiec/
+    bcc/
+    ...
+  val/
+    akiec/
+    ...
 ```
 
-Supported formats: `.png`, `.jpg`, `.jpeg`, `.webp`
-
-## Recommended starter dataset
-
-**Chest X-Ray Pneumonia** (Kaggle):
-
-- https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia
-
-After downloading and extracting, run from the project root:
+## Train
 
 ```bash
-python scripts/prepare_local_data.py --source path/to/chest_xray --output data
+cd backend
+python train.py --data ../data/ham10000 --epochs 15
 ```
-
-## Upload to Modal for cloud training
-
-```bash
-modal volume create medical-data
-modal volume put medical-data ./data/medical medical
-```
-
-This mounts at `/data/medical` inside the training container (see `train.py`).
-
-## Class names
-
-Folder names become labels (e.g. `NORMAL`, `PNEUMONIA`). Use clear, consistent names — they appear in the UI and API responses.

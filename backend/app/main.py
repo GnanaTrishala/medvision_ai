@@ -28,7 +28,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
     application = FastAPI(
         title=settings.app_name,
-        description="AI-powered chest X-ray analysis with explainable Grad-CAM",
+        description="AI-powered HAM10000 skin lesion analysis with explainable Grad-CAM",
         version="1.0.0",
         lifespan=lifespan,
     )

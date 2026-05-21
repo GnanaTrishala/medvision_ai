@@ -1,46 +1,48 @@
+from app.ml.labels import HIGH_RISK_DX, LESION_DISPLAY_NAMES
+
+
 def build_explanation(
     diagnosis: str,
     confidence: float,
     probabilities: list[dict[str, float | str]],
 ) -> str:
     pct = confidence * 100
-    label = diagnosis.replace("_", " ").title()
+    dx = diagnosis.lower()
+    label = LESION_DISPLAY_NAMES.get(dx, diagnosis.replace("_", " ").title())
 
-    if diagnosis.upper() == "PNEUMONIA":
+    if dx in HIGH_RISK_DX:
         finding = (
-            f"The model classified this chest X-ray as **{label}** with {pct:.1f}% confidence. "
-            "Radiographic patterns such as focal or diffuse opacities in the lung fields "
-            "were weighted heavily in this prediction. Grad-CAM highlights regions that "
-            "most influenced the decision—typically areas of increased density."
+            f"The model classified this dermoscopic image as **{label}** ({dx}) "
+            f"with {pct:.1f}% confidence. Patterns in pigment network, asymmetry, "
+            "or vascular structures in the lesion region contributed to this "
+            "prediction. Grad-CAM highlights areas that most influenced the decision."
         )
         recommendation = (
-            "This result is for decision support only. Correlate with clinical history, "
-            "vital signs, and laboratory findings. Consider confirmatory imaging or "
-            "microbiological workup per institutional protocol."
+            "This result is for decision support only. Correlate with dermatoscopic "
+            "examination, patient history, and dermoscopy. Consider biopsy or specialist "
+            "referral per institutional dermatology protocol for suspicious lesions."
         )
     else:
         finding = (
-            f"The model classified this chest X-ray as **{label}** with {pct:.1f}% confidence. "
-            "No dominant pneumonia-associated opacity pattern was detected above the "
-            "decision threshold. Grad-CAM shows relatively lower activation in typical "
-            "consolidation regions."
+            f"The model classified this dermoscopic image as **{label}** ({dx}) "
+            f"with {pct:.1f}% confidence. Grad-CAM shows which lesion regions "
+            "drove the classification relative to other HAM10000 categories."
         )
         recommendation = (
-            "Continue standard clinical assessment. If symptoms persist despite a "
-            "negative screening result, pursue additional diagnostic evaluation."
+            "Continue clinical follow-up as indicated. If morphology changes or "
+            "symptoms evolve, repeat imaging and consider specialist review."
         )
 
-    alt = [
-        p for p in probabilities
-        if str(p["label"]).upper() != diagnosis.upper()
-    ]
+    alt = [p for p in probabilities if str(p["label"]).lower() != dx]
     alt_text = ""
     if alt:
         top_alt = max(alt, key=lambda x: float(x["confidence"]))
+        alt_dx = str(top_alt["label"]).lower()
+        alt_label = LESION_DISPLAY_NAMES.get(alt_dx, alt_dx)
         alt_pct = float(top_alt["confidence"]) * 100
         alt_text = (
-            f" Alternative consideration: {str(top_alt['label']).replace('_', ' ').title()} "
-            f"({alt_pct:.1f}% estimated probability)."
+            f" Alternative consideration: {alt_label} ({alt_dx}) "
+            f"— {alt_pct:.1f}% estimated probability."
         )
 
     return (

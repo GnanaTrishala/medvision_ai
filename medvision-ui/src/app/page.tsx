@@ -16,8 +16,8 @@ import { ThemeToggle } from "~/components/layout/theme-toggle";
 const features = [
   {
     icon: Scan,
-    title: "Instant X-Ray Analysis",
-    desc: "Upload chest radiographs and receive AI classification in seconds.",
+    title: "Instant Lesion Analysis",
+    desc: "Upload dermoscopic images and receive HAM10000 classification in seconds.",
   },
   {
     icon: Brain,
@@ -64,14 +64,14 @@ export default function LandingPage() {
           transition={{ duration: 0.5 }}
         >
           <p className="mb-4 inline-flex rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1 text-sm font-medium text-teal-700 dark:text-teal-300">
-            AI Healthcare · Chest X-Ray Intelligence
+            AI Dermatology · HAM10000 Skin Lesion Intelligence
           </p>
           <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-            Radiology-grade AI analysis,{" "}
+            Dermatology-grade AI analysis,{" "}
             <span className="text-teal-600">built for clinicians</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            MedVision AI delivers pneumonia screening, confidence scoring,
+            MedVision AI delivers 7-class lesion screening, confidence scoring,
             Grad-CAM explainability, and downloadable reports — in one modern
             platform.
           </p>

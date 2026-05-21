@@ -17,7 +17,7 @@ import { Button } from "~/components/ui/button";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/analyze", label: "Analyze X-Ray", icon: Scan },
+  { href: "/analyze", label: "Analyze Lesion", icon: Scan },
   { href: "/history", label: "History", icon: History },
 ];
 

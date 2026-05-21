@@ -30,9 +30,9 @@ export default function AnalyzePage() {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Analyze chest X-ray</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Analyze skin lesion</h1>
         <p className="text-muted-foreground">
-          AI classification · Grad-CAM · clinical interpretation · PDF report
+          HAM10000 7-class classification · Grad-CAM · dermatology interpretation · PDF report
         </p>
       </div>
 

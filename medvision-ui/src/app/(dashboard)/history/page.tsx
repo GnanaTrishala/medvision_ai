@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { useRequireAuth } from "~/context/auth-context";
 import { predictionsApi, type PredictionSummary } from "~/lib/api";
+import { formatLesion, HIGH_RISK_DX } from "~/lib/lesion-labels";
 
 export default function HistoryPage() {
   const { token } = useRequireAuth();
@@ -20,7 +21,7 @@ export default function HistoryPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Prediction history</h1>
-        <p className="text-muted-foreground">All chest X-ray analyses for your account</p>
+        <p className="text-muted-foreground">All skin lesion analyses for your account</p>
       </div>
 
       <Card>
@@ -38,14 +39,14 @@ export default function HistoryPage() {
                 className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-muted/40"
               >
                 <div>
-                  <p className="font-medium">{p.diagnosis.replaceAll("_", " ")}</p>
+                      <p className="font-medium">{formatLesion(p.diagnosis)}</p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(p.created_at).toLocaleString()} · Report #{p.id}
                   </p>
                 </div>
                 <Badge
                   variant={
-                    p.diagnosis.toUpperCase() === "PNEUMONIA" ? "destructive" : "secondary"
+                    HIGH_RISK_DX.has(p.diagnosis.toLowerCase()) ? "destructive" : "secondary"
                   }
                 >
                   {(p.confidence * 100).toFixed(1)}%

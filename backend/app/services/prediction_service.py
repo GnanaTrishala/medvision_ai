@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.ml.inference import run_inference
+from app.ml.labels import BENIGN_REFERENCE_DX, HIGH_RISK_DX
 from app.models.prediction import Prediction
 from app.models.user import User
 
@@ -25,7 +26,7 @@ def create_prediction(db: Session, user: User, image_bytes: bytes) -> Prediction
     uid = uuid.uuid4().hex[:12]
     base = _ensure_dirs(user.id)
 
-    image_path = base / f"{uid}_xray.png"
+    image_path = base / f"{uid}_lesion.png"
     grad_path = base / f"{uid}_gradcam.png"
 
     image_path.write_bytes(image_bytes)
@@ -72,8 +73,9 @@ def get_dashboard_stats(db: Session, user_id: int) -> dict:
         .all()
     )
     total = len(rows)
-    pneumonia = sum(1 for r in rows if r.diagnosis.upper() == "PNEUMONIA")
-    normal = sum(1 for r in rows if r.diagnosis.upper() == "NORMAL")
+    # API field names unchanged; counts map to HAM10000 high-risk (mel/bcc/akiec) vs nv
+    pneumonia = sum(1 for r in rows if r.diagnosis.lower() in HIGH_RISK_DX)
+    normal = sum(1 for r in rows if r.diagnosis.lower() in BENIGN_REFERENCE_DX)
     avg_conf = sum(r.confidence for r in rows) / total if total else 0.0
 
     by_day: dict[str, list[float]] = {}

@@ -33,7 +33,7 @@ def generate_pdf_report(prediction: Prediction, user: User) -> bytes:
     body = styles["BodyText"]
 
     story = [
-        Paragraph("MedVision AI — Chest X-Ray Analysis Report", title_style),
+        Paragraph("MedVision AI — Skin Lesion Analysis Report", title_style),
         Paragraph(
             f"<b>Patient / Clinician:</b> {user.full_name}<br/>"
             f"<b>Email:</b> {user.email}<br/>"

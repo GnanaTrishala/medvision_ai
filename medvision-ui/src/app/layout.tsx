@@ -7,7 +7,7 @@ import { Providers } from "~/components/providers";
 export const metadata: Metadata = {
   title: "MedVision AI — Clinical Imaging Intelligence",
   description:
-    "AI-powered chest X-ray analysis with explainable Grad-CAM and clinical decision support",
+    "AI-powered HAM10000 skin lesion analysis with explainable Grad-CAM and clinical decision support",
 };
 
 const geist = Geist({

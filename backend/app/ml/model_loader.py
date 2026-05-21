@@ -5,11 +5,12 @@ import torch.nn as nn
 from torchvision import models
 
 from app.core.config import get_settings
+from app.ml.labels import HAM10000_CLASSES
 
-DEFAULT_CLASSES = ["NORMAL", "PNEUMONIA"]
+DEFAULT_CLASSES = HAM10000_CLASSES
 
 
-def build_efficientnet(num_classes: int = 2) -> nn.Module:
+def build_efficientnet(num_classes: int = len(DEFAULT_CLASSES)) -> nn.Module:
     weights = models.EfficientNet_B0_Weights.IMAGENET1K_V1
     model = models.efficientnet_b0(weights=weights)
     in_features = model.classifier[1].in_features
@@ -20,7 +21,7 @@ def build_efficientnet(num_classes: int = 2) -> nn.Module:
 class ModelBundle:
     def __init__(self):
         self.model: nn.Module | None = None
-        self.classes: list[str] = DEFAULT_CLASSES
+        self.classes: list[str] = list(DEFAULT_CLASSES)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self._target_layer: nn.Module | None = None
 
@@ -47,12 +48,10 @@ class ModelBundle:
             else:
                 self.model.load_state_dict(checkpoint)
         else:
-            # Untrained head — still runnable for demo; train for real use
             pass
 
         self.model.to(self.device)
         self.model.eval()
-        # Last feature block for Grad-CAM
         features = self.model.features
         self._target_layer = features[-1]
 

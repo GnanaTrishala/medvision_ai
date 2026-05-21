@@ -1,8 +1,8 @@
 """
-Train EfficientNet-B0 on Chest X-Ray Pneumonia dataset (ImageFolder layout).
+Train EfficientNet-B0 on HAM10000 skin lesion dataset (ImageFolder layout).
 
 Usage (from backend/):
-  python train.py --data ../data
+  python train.py --data ../data/ham10000
 """
 
 from __future__ import annotations
@@ -27,9 +27,8 @@ def get_transforms():
     train_t = transforms.Compose(
         [
             transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-            transforms.Grayscale(num_output_channels=3),
             transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(8),
+            transforms.RandomRotation(10),
             transforms.ToTensor(),
             transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],
@@ -40,7 +39,6 @@ def get_transforms():
     val_t = transforms.Compose(
         [
             transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-            transforms.Grayscale(num_output_channels=3),
             transforms.ToTensor(),
             transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],
@@ -53,7 +51,7 @@ def get_transforms():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data", type=Path, default=Path("../data"))
+    parser.add_argument("--data", type=Path, default=Path("../data/ham10000"))
     parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--output", type=Path, default=Path("models/best_model.pth"))
@@ -62,7 +60,10 @@ def main():
     train_dir = args.data / "train"
     val_dir = args.data / "val"
     if not train_dir.is_dir():
-        raise FileNotFoundError(f"Missing {train_dir}. Run scripts/prepare_local_data.py first.")
+        raise FileNotFoundError(
+            f"Missing {train_dir}. Run: python scripts/prepare_local_data.py "
+            f"--source ./data/ham10000 --output ./data/ham10000"
+        )
 
     train_t, val_t = get_transforms()
     train_base = datasets.ImageFolder(train_dir, transform=train_t)

@@ -10,6 +10,7 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { useRequireAuth } from "~/context/auth-context";
 import { predictionsApi, type DashboardAnalytics } from "~/lib/api";
+import { formatLesion } from "~/lib/lesion-labels";
 
 function StatCard({
   label,
@@ -51,7 +52,7 @@ export default function DashboardPage() {
           Welcome, {user?.full_name?.split(" ")[0] ?? "Doctor"}
         </h1>
         <p className="text-muted-foreground">
-          Your AI radiology workspace — overview and recent activity
+          Your AI dermatology workspace — overview and recent activity
         </p>
       </div>
 
@@ -62,12 +63,12 @@ export default function DashboardPage() {
           icon={Scan}
         />
         <StatCard
-          label="Pneumonia flagged"
+          label="High-risk lesions"
           value={stats?.pneumonia_count ?? 0}
           icon={Brain}
         />
         <StatCard
-          label="Normal findings"
+          label="Nevus (nv)"
           value={stats?.normal_count ?? 0}
           icon={TrendingUp}
         />
@@ -118,7 +119,7 @@ export default function DashboardPage() {
             <p className="text-sm text-muted-foreground">
               No analyses yet.{" "}
               <Link href="/analyze" className="text-teal-600 hover:underline">
-                Upload your first X-ray
+                Upload your first lesion image
               </Link>
             </p>
           ) : (
@@ -136,7 +137,7 @@ export default function DashboardPage() {
                   >
                     <div>
                       <p className="font-medium">
-                        {p.diagnosis.replaceAll("_", " ")}
+                        {formatLesion(p.diagnosis)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(p.created_at).toLocaleString()}

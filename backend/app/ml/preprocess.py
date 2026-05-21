@@ -7,11 +7,10 @@ from torchvision import transforms
 
 IMAGE_SIZE = 224
 
-# ImageNet normalization (EfficientNet pretrained)
+# ImageNet normalization (EfficientNet pretrained); RGB dermoscopy images
 TRANSFORM = transforms.Compose(
     [
         transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-        transforms.Grayscale(num_output_channels=3),
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],

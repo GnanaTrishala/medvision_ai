@@ -28,3 +28,9 @@ medvision-ui/.next/
 # OS
 .DS_Store
 Thumbs.db
+
+# HAM10000 dataset
+data/HAM10000_images_part_1/
+data/HAM10000_images_part_2/
+data/HAM10000_metadata.csv
+data/ham10000/

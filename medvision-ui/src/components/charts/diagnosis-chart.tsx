@@ -18,8 +18,8 @@ export function DiagnosisChart({
   pneumonia: number;
 }) {
   const data = [
-    { name: "Normal", value: normal },
-    { name: "Pneumonia", value: pneumonia },
+    { name: "Nevus (nv)", value: normal },
+    { name: "High-risk (mel/bcc/akiec)", value: pneumonia },
   ].filter((d) => d.value > 0);
 
   if (!data.length) {

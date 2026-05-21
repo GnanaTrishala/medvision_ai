@@ -1,15 +1,18 @@
 """
-Reorganize the Kaggle Chest X-Ray Pneumonia folder into MedVision's train/val layout.
+Prepare HAM10000 for MedVision ImageFolder training.
 
 Usage:
-  python scripts/prepare_local_data.py --source ./chest_xray --output ./data
+  python scripts/prepare_local_data.py --source ./data/ham10000 --output ./data/ham10000
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
 import shutil
 from pathlib import Path
+
+HAM10000_CLASSES = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
 
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
@@ -26,53 +29,116 @@ def copy_class_images(src_class_dir: Path, dest_class_dir: Path) -> int:
     return count
 
 
-def prepare_from_chest_xray(source: Path, output: Path) -> None:
-    """Map chest_xray/train and chest_xray/test into data/train and data/val."""
-    train_src = source / "train"
-    test_src = source / "test"
+def find_metadata_csv(source: Path) -> Path | None:
+    for name in ("HAM10000_metadata.csv", "hmnist_28_28_L.csv"):
+        candidate = source / name
+        if candidate.is_file():
+            return candidate
+    return None
 
-    if not train_src.is_dir():
+
+def find_image_dirs(source: Path) -> list[Path]:
+    dirs = []
+    for path in sorted(source.iterdir()):
+        if path.is_dir() and (
+            path.name.startswith("HAM10000_images")
+            or path.name in ("images", "HAM10000_images")
+        ):
+            dirs.append(path)
+    if (source / "HAM10000_images").is_dir():
+        dirs.append(source / "HAM10000_images")
+    return list(dict.fromkeys(dirs))
+
+
+def resolve_image_path(image_dirs: list[Path], image_id: str) -> Path | None:
+    for ext in (".jpg", ".jpeg", ".png"):
+        name = f"{image_id}{ext}"
+        for img_dir in image_dirs:
+            candidate = img_dir / name
+            if candidate.is_file():
+                return candidate
+    return None
+
+
+def prepare_ham10000(source: Path, output: Path, val_ratio: float = 0.2) -> None:
+    """Build train/val ImageFolder from HAM10000 metadata + image folders."""
+    if (source / "train").is_dir() and any((source / "train").iterdir()):
+        print(f"Found existing ImageFolder at {source / 'train'} — skipping metadata split.")
+        if output.resolve() != source.resolve():
+            for split in ("train", "val"):
+                src = source / split
+                if src.is_dir():
+                    for cls in src.iterdir():
+                        if cls.is_dir():
+                            copy_class_images(cls, output / split / cls.name)
+        return
+
+    metadata_path = find_metadata_csv(source)
+    if not metadata_path:
         raise FileNotFoundError(
-            f"Expected {train_src} (Kaggle layout: chest_xray/train/NORMAL, ...)"
+            f"No HAM10000_metadata.csv under {source}. "
+            "Place the Kaggle HAM10000 files in data/ham10000/."
+        )
+
+    image_dirs = find_image_dirs(source)
+    if not image_dirs:
+        raise FileNotFoundError(
+            f"No HAM10000_images* folders under {source}."
         )
 
     out_train = output / "train"
     out_val = output / "val"
+    counts_train: dict[str, int] = dict.fromkeys(HAM10000_CLASSES, 0)
+    counts_val: dict[str, int] = dict.fromkeys(HAM10000_CLASSES, 0)
 
-    total_train = 0
-    for class_dir in sorted(train_src.iterdir()):
-        if class_dir.is_dir():
-            total_train += copy_class_images(class_dir, out_train / class_dir.name)
+    with metadata_path.open(newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            dx = (row.get("dx") or "").strip().lower()
+            image_id = (row.get("image_id") or "").strip()
+            if dx not in HAM10000_CLASSES or not image_id:
+                continue
 
-    total_val = 0
-    if test_src.is_dir():
-        for class_dir in sorted(test_src.iterdir()):
-            if class_dir.is_dir():
-                total_val += copy_class_images(class_dir, out_val / class_dir.name)
+            src_img = resolve_image_path(image_dirs, image_id)
+            if not src_img:
+                continue
 
-    print(f"Wrote {total_train} training images to {out_train}")
-    if total_val:
-        print(f"Wrote {total_val} validation images to {out_val}")
-    else:
-        print("No test/ folder found — training will auto-split 80/20 from train/")
+            # Deterministic split by image_id hash
+            bucket = hash(image_id) % 100
+            is_val = bucket < int(val_ratio * 100)
+            dest_root = out_val if is_val else out_train
+            dest_dir = dest_root / dx
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            dest_file = dest_dir / src_img.name
+            if not dest_file.exists():
+                shutil.copy2(src_img, dest_file)
+
+            if is_val:
+                counts_val[dx] += 1
+            else:
+                counts_train[dx] += 1
+
+    print(f"HAM10000 prepared under {output}")
+    for dx in HAM10000_CLASSES:
+        print(f"  {dx}: train={counts_train[dx]}, val={counts_val[dx]}")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Prepare MedVision dataset folders")
+    parser = argparse.ArgumentParser(description="Prepare HAM10000 dataset folders")
     parser.add_argument(
         "--source",
         type=Path,
-        required=True,
-        help="Path to extracted chest_xray (or similar ImageFolder source)",
+        default=Path("data/ham10000"),
+        help="Path to HAM10000 root (metadata + image folders)",
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("data"),
-        help="Output root (creates train/ and val/ inside)",
+        default=Path("data/ham10000"),
+        help="Output root for train/ and val/ subfolders",
     )
     args = parser.parse_args()
-    prepare_from_chest_xray(args.source.resolve(), args.output.resolve())
+    prepare_ham10000(args.source.resolve(), args.output.resolve())
 
 
 if __name__ == "__main__":

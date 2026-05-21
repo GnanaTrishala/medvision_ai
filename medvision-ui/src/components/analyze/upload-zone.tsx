@@ -58,7 +58,7 @@ export function UploadZone({
           <CloudUpload className="h-7 w-7" />
         </div>
         <div>
-          <p className="text-lg font-semibold">Drop chest X-ray here</p>
+          <p className="text-lg font-semibold">Drop dermoscopy image here</p>
           <p className="mt-1 text-sm text-muted-foreground">
             or click to browse — PNG, JPEG up to 10MB
           </p>

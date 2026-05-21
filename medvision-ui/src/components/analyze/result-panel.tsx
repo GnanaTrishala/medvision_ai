@@ -10,6 +10,7 @@ import { Progress } from "~/components/ui/progress";
 import type { AnalyzeResult } from "~/lib/api";
 import { downloadReport } from "~/lib/api";
 import { fetchAuthenticatedImage } from "~/lib/assets";
+import { formatLesion, HIGH_RISK_DX } from "~/lib/lesion-labels";
 
 export function ResultPanel({
   result,
@@ -18,7 +19,7 @@ export function ResultPanel({
   result: AnalyzeResult;
   token: string;
 }) {
-  const [xrayUrl, setXrayUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [gradUrl, setGradUrl] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
 
@@ -27,7 +28,7 @@ export function ResultPanel({
     (async () => {
       try {
         const x = await fetchAuthenticatedImage(result.image_url, token);
-        if (!cancelled) setXrayUrl(x);
+        if (!cancelled) setImageUrl(x);
         if (result.grad_cam_url) {
           const g = await fetchAuthenticatedImage(result.grad_cam_url, token);
           if (!cancelled) setGradUrl(g);
@@ -41,7 +42,7 @@ export function ResultPanel({
     };
   }, [result, token]);
 
-  const isPneumonia = result.diagnosis.toUpperCase() === "PNEUMONIA";
+  const isHighRisk = HIGH_RISK_DX.has(result.diagnosis.toLowerCase());
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -72,8 +73,8 @@ export function ResultPanel({
               EfficientNet-B0 · Grad-CAM explainability
             </p>
           </div>
-          <Badge variant={isPneumonia ? "destructive" : "default"}>
-            {result.diagnosis.replaceAll("_", " ")}
+          <Badge variant={isHighRisk ? "destructive" : "default"}>
+            {formatLesion(result.diagnosis)}
           </Badge>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -88,7 +89,7 @@ export function ResultPanel({
           </div>
           {result.probabilities.map((p) => (
             <div key={p.label} className="flex justify-between text-sm text-muted-foreground">
-              <span>{p.label.replaceAll("_", " ")}</span>
+              <span>{formatLesion(p.label)}</span>
               <span>{(p.confidence * 100).toFixed(1)}%</span>
             </div>
           ))}
@@ -102,13 +103,13 @@ export function ResultPanel({
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Source X-Ray</CardTitle>
+            <CardTitle className="text-base">Dermoscopy Image</CardTitle>
           </CardHeader>
           <CardContent>
-            {xrayUrl ? (
+            {imageUrl ? (
               <img
-                src={xrayUrl}
-                alt="X-ray"
+                src={imageUrl}
+                alt="Skin lesion"
                 className="mx-auto max-h-80 rounded-lg object-contain"
               />
             ) : (
