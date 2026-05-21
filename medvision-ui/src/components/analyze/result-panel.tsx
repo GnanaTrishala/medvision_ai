@@ -25,7 +25,7 @@ export function ResultPanel({
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    void (async () => {
       try {
         const x = await fetchAuthenticatedImage(result.image_url, token);
         if (!cancelled) setImageUrl(x);

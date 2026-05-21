@@ -40,7 +40,7 @@ export function ConfidenceChart({
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis dataKey="date" tick={{ fontSize: 11 }} />
         <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-        <Tooltip formatter={(v) => [`${v}%`, "Avg confidence"]} />
+        <Tooltip formatter={(v) => [`${String(v ?? 0)}%`, "Avg confidence"]} />
         <Area
           type="monotone"
           dataKey="pct"

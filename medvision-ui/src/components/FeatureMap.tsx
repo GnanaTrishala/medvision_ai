@@ -9,7 +9,7 @@ const FeatureMap = ({
     title: string;
     internal?: boolean;
 }) => {
-    if (!data || !data.length || !data[0]?.length) return null;
+    if (!data?.[0]?.length) return null;
 
     const mapHeight = data.length;
     const mapWidth = data[0].length;
