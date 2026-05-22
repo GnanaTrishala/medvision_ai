@@ -44,26 +44,152 @@ MedVision AI combines a **PyTorch EfficientNet-B0** classifier trained on the **
 
 ---
 
+## System architecture
+
+MedVision AI follows a modern decoupled architecture designed for high-performance AI inference and a responsive user experience.
+
+```mermaid
+graph TD
+    subgraph "Frontend (Next.js 15)"
+        UI[React Components / Shadcn]
+        State[Auth Context / State]
+        API_Client[API Fetch Client]
+    end
+
+    subgraph "Backend (FastAPI)"
+        Router[API Gateway / Router]
+        Auth[JWT Security / OAuth2]
+        Services[Business Logic Services]
+        ML_Engine[PyTorch Inference Engine]
+    end
+
+    subgraph "Data & Persistence"
+        DB[(SQLAlchemy ORM / SQLite)]
+        FS[Local Artifact Storage]
+    end
+
+    UI --> State
+    State --> API_Client
+    API_Client -->|REST API / JWT| Router
+    Router --> Auth
+    Router --> Services
+    Services --> ML_Engine
+    Services --> DB
+    Services --> FS
+    ML_Engine --> FS
+```
+
+---
+
+## AI inference workflow
+
+The analysis pipeline transforms raw dermoscopic images into explainable clinical insights through a multi-stage ML workflow.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant M as EfficientNet-B0
+    participant G as Grad-CAM
+
+    U->>F: Upload Lesion Image
+    F->>B: POST /predictions/analyze (Multipart)
+    B->>B: Image Preprocessing (224x224)
+    B->>M: Forward Inference Pass
+    M-->>B: Class Probabilities
+    B->>G: Hook Activations & Gradients
+    G-->>B: Compute Saliency Map
+    B->>B: Generate Clinical Interpretation
+    B->>B: Persist Image & Grad-CAM Overlay
+    B-->>F: JSON (Results + Image URLs)
+    F-->>U: Render Heatmap & AI Narrative
+```
+
+### 1. Preprocessing
+The `preprocess_pil` module resizes images to **224x224** and applies ImageNet normalization, ensuring consistency with the EfficientNet-B0 training regime.
+
+### 2. Neural Inference
+The **EfficientNet-B0** model (fine-tuned on HAM10000) generates logits, which are converted to probabilities via Softmax.
+
+### 3. Explainability (Grad-CAM)
+The `GradCAM` class registers forward and backward hooks on the final convolutional layer of the model to compute gradients, identifying the specific pixels that most heavily influenced the diagnosis.
+
+---
+
+## Authentication flow
+
+Stateless security is enforced via JWT, ensuring that all clinical data remains private and associated with the correct user.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant D as Database
+
+    U->>F: Submit Credentials
+    F->>B: POST /auth/login
+    B->>D: Verify User (bcrypt)
+    D-->>B: Identity Confirmed
+    B-->>F: JWT Access Token
+    F->>F: Store in LocalStorage
+    Note over F, B: Subsequent requests include Bearer Token
+    F->>B: GET /predictions/dashboard
+    B->>B: Decode & Validate JWT
+    B-->>F: User-specific Analytics
+```
+
+---
+
+## Dashboard & data flow
+
+The dashboard leverages FastAPI's aggregation capabilities to provide a high-level view of diagnostic trends.
+
+- **Metric Aggregation**: The `prediction_service` filters history to count "High Risk" (Melanoma, BCC, AKIEC) vs. "Common" (Melanocytic Nevus) lesions.
+- **Temporal Analysis**: Confidence scores are grouped by date to visualize model performance trends over time using **Recharts**.
+- **State Hydration**: The `AuthContext` ensures user profile and session data are available across all dashboard views.
+
+---
+
+## API architecture
+
+The backend is architected with a strict separation of concerns to facilitate testability and model updates.
+
+- **Route Layer**: Fast-fail validation using Pydantic schemas.
+- **Dependency Layer**: Unified session management and authentication guards (`get_current_user`).
+- **Service Layer**: Decoupled business logic for predictions, report generation (PDF), and explainability.
+- **ML Layer**: Singleton model loader (`bundle`) to prevent memory leaks and minimize cold-start latency.
+
+---
+
 ## Project structure
 
 ```
 medvision_ai/
-├── backend/                    # FastAPI API + ML inference
+├── backend/                    # FastAPI Backend
 │   ├── app/
-│   │   ├── api/routes/         # auth, predictions, reports, files
-│   │   ├── core/               # config, security, database
-│   │   ├── ml/                 # EfficientNet, Grad-CAM, preprocessing
-│   │   ├── models/             # SQLAlchemy ORM
+│   │   ├── api/                # API Routing & Dependencies
+│   │   │   └── routes/         # Auth, Predictions, Reports, Files
+│   │   ├── core/               # App Configuration & Security
+│   │   ├── ml/                 # AI Engine (Inference, Grad-CAM, Preprocessing)
+│   │   ├── models/             # SQLAlchemy Database Models
 │   │   ├── schemas/            # Pydantic DTOs
-│   │   └── services/           # predictions, explanations, PDF
-│   ├── train.py                # Train EfficientNet-B0 on HAM10000
-│   └── models/                 # best_model.pth (after training)
-├── medvision-ui/               # Next.js frontend
-├── data/                       # HAM10000 raw + prepared splits
-├── scripts/
-│   └── prepare_local_data.py   # Build train/val ImageFolder
-├── assets/                     # Screenshots & media for docs
-└── README.md
+│   │   └── services/           # Business Logic (Prediction, Reports)
+│   ├── artifacts/              # Generated Heatmap Overlays
+│   ├── data/                   # Database files
+│   ├── models/                 # PyTorch Model Weights
+│   └── uploads/                # Original Lesion Images
+├── medvision-ui/               # Next.js Frontend
+│   ├── src/
+│   │   ├── app/                # App Router (Pages & Layouts)
+│   │   ├── components/         # Dashboard & AI Visualization UI
+│   │   ├── context/            # Authentication State
+│   │   ├── lib/                # API Client & Utility Functions
+│   │   └── styles/             # Tailwind CSS & Global Styling
+├── data/                       # HAM10000 Dataset management
+├── scripts/                    # Training & Preparation Utilities
+└── assets/                     # Documentation Media
 ```
 
 ---
